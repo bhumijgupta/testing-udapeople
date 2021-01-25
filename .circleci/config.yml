@@ -29,7 +29,7 @@ commands:
           when: on_fail
           command: |
             # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-            SUCCESS = (curl -H "token: migration_${CIRCLE_WORKFLOW_ID}" --request GET https://api.memstash.io/values/MigrationsRan)
+            export SUCCESS = $(curl -H "token: migration_${CIRCLE_WORKFLOW_ID}" --request GET https://api.memstash.io/values/MigrationsRan)
             if(( $SUCCESS==1 )); 
             then
               cd ~/project/backend
@@ -213,7 +213,7 @@ jobs:
           name: Run migrations
           command: |
             cd backend
-            npm run migrations > migrations.log
+            npm run migrations | tee migrations.log
             cat migrations.log
       - run:
           name: Send migration results to memstash
