@@ -39,7 +39,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-build-v1]
+          keys: [frontend-build-v2]
       - run:
           name: Build front-end
           command: |
@@ -48,7 +48,7 @@ jobs:
             npm run build
       - save_cache:
           paths: [frontend/node_modules]
-          key: frontend-build-v1
+          key: frontend-build-v2
 
   build-backend:
     docker:
@@ -56,7 +56,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-build]
+          keys: [backend-build-v2]
       - run:
           name: Back-end build
           command: |
@@ -65,7 +65,7 @@ jobs:
             npm run build
       - save_cache:
           paths: [backend/node_modules]
-          key: backend-build
+          key: backend-build-v2
 
   test-frontend:
     docker:
@@ -75,7 +75,7 @@ jobs:
       - checkout
       # Restore from cache
       - restore_cache:
-          keys: [frontend-build-v1]
+          keys: [frontend-build-v2]
       # Your job code here
       - run:
           name: Front-end test
@@ -90,7 +90,7 @@ jobs:
       - checkout
       # Restore from cache
       - restore_cache:
-          keys: [backend-build]
+          keys: [backend-build-v2]
       # Your job code here
       - run:
           name: Back-end test
@@ -99,12 +99,13 @@ jobs:
             npm run test
 
   scan-frontend:
-    - image: circleci/node:13.8.0
+    docker:
+      - image: circleci/node:13.8.0
     steps:
       - checkout
       # Restore from cache
       - restore_cache:
-          keys: [frontend-build-v1]
+          keys: [frontend-build-v2]
       # Your job code here
       - run:
           name: Front-end audit
@@ -112,14 +113,14 @@ jobs:
             cd frontend
             npm audit --audit-level=critical
 
-
-  scan-frontend:
-    - image: circleci/node:13.8.0
+  scan-backend:
+    docker:
+      - image: circleci/node:13.8.0
     steps:
       - checkout
       # Restore from cache
       - restore_cache:
-          keys: [backend-build]
+          keys: [backend-build-v2]
       # Your job code here
       - run:
           name: Back-end audit
