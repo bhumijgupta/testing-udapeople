@@ -138,7 +138,7 @@ jobs:
 
   deploy-infrastructure:
     docker:
-      - image: cimg/base
+      - image: cimg/base:2020.01
     steps:
       - checkout
       - aws-cli/setup
