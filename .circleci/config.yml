@@ -39,16 +39,16 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-build-v2]
+          keys: [frontend-build-v3]
       - run:
           name: Build front-end
           command: |
             cd frontend
-            npm i
+            npm ci
             npm run build
       - save_cache:
           paths: [frontend/node_modules]
-          key: frontend-build-v2
+          key: frontend-build-v3
 
   build-backend:
     docker:
@@ -56,16 +56,16 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-build-v2]
+          keys: [backend-build-v3]
       - run:
           name: Back-end build
           command: |
             cd backend
-            npm i
+            npm ci
             npm run build
       - save_cache:
           paths: [backend/node_modules]
-          key: backend-build-v2
+          key: backend-build-v3
 
   test-frontend:
     docker:
@@ -75,7 +75,7 @@ jobs:
       - checkout
       # Restore from cache
       - restore_cache:
-          keys: [frontend-build-v2]
+          keys: [frontend-build-v3]
       # Your job code here
       - run:
           name: Front-end test
@@ -90,7 +90,7 @@ jobs:
       - checkout
       # Restore from cache
       - restore_cache:
-          keys: [backend-build-v2]
+          keys: [backend-build-v3]
       # Your job code here
       - run:
           name: Back-end test
@@ -105,7 +105,7 @@ jobs:
       - checkout
       # Restore from cache
       - restore_cache:
-          keys: [frontend-build-v2]
+          keys: [frontend-build-v3]
       # Your job code here
       - run:
           name: Front-end audit
@@ -120,7 +120,7 @@ jobs:
       - checkout
       # Restore from cache
       - restore_cache:
-          keys: [backend-build-v2]
+          keys: [backend-build-v3]
       # Your job code here
       - run:
           name: Back-end audit
