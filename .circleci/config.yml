@@ -198,7 +198,7 @@ jobs:
           command: |
             export ANSIBLE_HOST_KEY_CHECKING=false
             cd .circleci/ansible
-            ansible-playbook configure-server.yml -i inventory
+            ansible-playbook configure-server.yml -i inventory.txt
       - destroy-environment
 
 #   run-migrations:
