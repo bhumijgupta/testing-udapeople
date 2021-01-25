@@ -23,21 +23,19 @@ commands:
 
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.
-    parameters:
-      # Add parameter here
     steps:
       - run:
           name: Revert migrations
-          # Add when this will run
+          when: on_fail
           command: |
             # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-            SUCCESS = 1
+            SUCCESS = (curl -H "token: migration_${CIRCLE_WORKFLOW_ID}" --request GET https://api.memstash.io/values/MigrationsRan)
             if(( $SUCCESS==1 )); 
             then
-            #  cd ~/project/backend
-            #  npm install
-            #  Add revert code here. You can find this in the Getting Started section.
-              exit 1
+              cd ~/project/backend
+              npm ci
+              #  Add revert code here. You can find this in the Getting Started section.
+              npm run migrations:revert
             fi
 
 jobs:
@@ -201,22 +199,34 @@ jobs:
             ansible-playbook configure-server.yml -i inventory.txt
       - destroy-environment
 
-#   run-migrations:
-#     docker:
-#       # Docker image here that supports NodeJS
-#     steps:
-#       # Checkout code from git
-#       - run:
-#           name: Run migrations
-#           command: |
-#             # Your code here
-#             exit 1
-#       - run:
-#           name: Send migration results to memstash
-#           command: |
-#             # Your code here
-#             exit 1
-#       # Here's where you will add some code to rollback on failure
+  run-migrations:
+    docker:
+      # Docker image here that supports NodeJS
+      - image: circleci/node:13.8.0
+    steps:
+      # Checkout code from git
+      - checkout
+      - aws-cli/setup
+      - restore_cache:
+          keys: [backend-build-v3]
+      - run:
+          name: Run migrations
+          command: |
+            cd backend
+            npm run migrations > migrations.log
+            cat migrations.log
+      - run:
+          name: Send migration results to memstash
+          command: |
+            if [ (cat migrations.log | grep -c "has been executed successfully") > 0 ]
+            then
+              curl -H "Content-Type: text/plain" -H "token: migration_${CIRCLE_WORKFLOW_ID}" --request PUT --data "1" https://api.memstash.io/values/MigrationsRan
+            else
+              echo "No migrations ran"
+            fi
+      - revert-migrations
+      - destroy-environment
+      # Here's where you will add some code to rollback on failure
 
 #   deploy-frontend:
 #     docker:
