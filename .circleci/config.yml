@@ -29,13 +29,12 @@ commands:
           when: on_fail
           command: |
             # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-            export SUCCESS=$(curl -H "token: migration_${CIRCLE_WORKFLOW_ID}" --request GET https://api.memstash.io/values/MigrationsRan)
+            export SUCCESS=$(curl -H "token: ${CIRCLE_WORKFLOW_ID}" --request GET https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID})
             if(( $SUCCESS==1 )); 
             then
-              cd ~/project/backend
-              npm ci
-              #  Add revert code here. You can find this in the Getting Started section.
-              npm run migrations:revert
+            cd ~/project/backend
+            npm ci
+            npm run migrations:revert
             fi
 
 jobs:
@@ -228,16 +227,19 @@ jobs:
           name: Run migrations
           command: |
             cd backend
-            npm run migrations | tee migrations.log
-            cat migrations.log
+            npm run migrations > migration.log
+            export migration_status=$(cat migration.log | grep -c "has been executed successfully")
       - run:
           name: Send migration results to memstash
           command: |
-            if [ (cat migrations.log | grep -c "has been executed successfully") > 0 ]
+            if [ $migration_status > 0 ] 
             then
-              curl -H "Content-Type: text/plain" -H "token: migration_${CIRCLE_WORKFLOW_ID}" --request PUT --data "1" https://api.memstash.io/values/MigrationsRan
-            else
-              echo "No migrations ran"
+              curl -H "Content-Type: text/plain" \
+                  -H "token: ${CIRCLE_WORKFLOW_ID}" \
+                  --request PUT --data "1" \
+                  https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID}
+              else
+                  echo "No migrassion ran"
             fi
       - revert-migrations
       - destroy-environment
